@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { Grid, MapPin, Calendar, Award } from 'lucide-react-native';
+import { Grid, MapPin, Calendar, Award, Wifi, LogOut } from 'lucide-react-native';
 import { supabase, Database } from '@/lib/supabase';
 import { useWallet } from '@/contexts/WalletContext';
 import { useUser } from '@/contexts/UserContext';
@@ -17,7 +17,7 @@ type CheckIn = Database['public']['Tables']['check_ins']['Row'] & {
 };
 
 export default function CollectionScreen() {
-  const { isConnected } = useWallet();
+  const { isConnected, connect, disconnect, isConnecting, address } = useWallet();
   const { user } = useUser();
   const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,6 +114,16 @@ export default function CollectionScreen() {
         <Text style={styles.emptyText}>
           Connect your wallet to view your NFT collection
         </Text>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={connect}
+          disabled={isConnecting}
+        >
+          <Wifi size={16} color="#ffffff" />
+          <Text style={styles.primaryButtonText}>
+            {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -132,10 +142,20 @@ export default function CollectionScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Collection</Text>
-        <View style={styles.countBadge}>
-          <Text style={styles.countText}>{checkIns.length} NFTs</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>My Collection</Text>
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>{checkIns.length} NFTs</Text>
+          </View>
         </View>
+        {isConnected && address && (
+          <TouchableOpacity style={styles.addressBadge} onPress={disconnect}>
+            <Text style={styles.addressText}>
+              {address.slice(0, 6)}...{address.slice(-4)}
+            </Text>
+            <LogOut size={14} color="#1e40af" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.statsRow}>
@@ -297,6 +317,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
@@ -312,6 +337,35 @@ const styles = StyleSheet.create({
     color: '#1e40af',
     fontSize: 14,
     fontWeight: '700',
+  },
+  addressBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  addressText: {
+    color: '#1e40af',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',

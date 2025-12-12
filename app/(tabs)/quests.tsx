@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Target, Trophy, Clock, CheckCircle } from 'lucide-react-native';
+import { Target, Trophy, Clock, CheckCircle, Wifi, LogOut } from 'lucide-react-native';
 import { supabase, Database } from '@/lib/supabase';
 import { useWallet } from '@/contexts/WalletContext';
 import { useUser } from '@/contexts/UserContext';
@@ -19,7 +19,7 @@ type UserQuest = Database['public']['Tables']['user_quests']['Row'] & {
 };
 
 export default function QuestsScreen() {
-  const { isConnected } = useWallet();
+  const { isConnected, connect, disconnect, isConnecting, address } = useWallet();
   const { user } = useUser();
   const [userQuests, setUserQuests] = useState<UserQuest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -138,6 +138,16 @@ export default function QuestsScreen() {
         <Text style={styles.emptyText}>
           Connect your wallet to view and complete quests
         </Text>
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={connect}
+          disabled={isConnecting}
+        >
+          <Wifi size={16} color="#ffffff" />
+          <Text style={styles.primaryButtonText}>
+            {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -154,11 +164,21 @@ export default function QuestsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Daily Quests</Text>
-        <View style={styles.levelBadge}>
-          <Trophy size={16} color="#fbbf24" />
-          <Text style={styles.levelText}>Level {user.level}</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerTitle}>Daily Quests</Text>
+          <View style={styles.levelBadge}>
+            <Trophy size={16} color="#fbbf24" />
+            <Text style={styles.levelText}>Level {user.level}</Text>
+          </View>
         </View>
+        {isConnected && address && (
+          <TouchableOpacity style={styles.addressBadge} onPress={disconnect}>
+            <Text style={styles.addressText}>
+              {address.slice(0, 6)}...{address.slice(-4)}
+            </Text>
+            <LogOut size={14} color="#1e40af" />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -305,10 +325,44 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#111827',
+  },
+  addressBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#dbeafe',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  addressText: {
+    color: '#1e40af',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  primaryButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   levelBadge: {
     flexDirection: 'row',
