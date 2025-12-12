@@ -119,14 +119,50 @@ NFT rarity is calculated based on:
 - **user_quests**: User quest progress tracking
 - **location_stats**: Popularity metrics for rarity calculation
 
-## Smart Contracts (To Be Deployed)
+## Smart Contracts
 
-The app is designed to work with Scroll blockchain smart contracts:
+The app includes production-ready Solidity smart contracts in the `/contracts` directory:
 
-- **LocationNFT**: ERC-721 contract for location-based NFTs
-- **QuestRewards**: ERC-20 token for quest rewards
+- **LocationNFT.sol**: ERC-721 contract for location-based NFTs
+- **StreetPassToken.sol**: ERC-20 token for quest rewards and check-in incentives
 
-*Note: Smart contracts need to be deployed to Scroll blockchain and addresses added to the codebase.*
+### Deploying Smart Contracts
+
+1. **Install Contract Dependencies**
+```bash
+npm run contracts:install
+```
+
+2. **Configure Deployment**
+Create a `.env.contracts` file:
+```
+PRIVATE_KEY=your_deployer_wallet_private_key
+SCROLL_SCAN_API_KEY=your_scrollscan_api_key
+```
+
+3. **Deploy to Scroll Testnet (Sepolia)**
+```bash
+npm run contracts:deploy:testnet
+```
+
+4. **Deploy to Scroll Mainnet**
+```bash
+npm run contracts:deploy:mainnet
+```
+
+5. **Update App Configuration**
+After deployment, add contract addresses to `.env`:
+```
+EXPO_PUBLIC_LOCATION_NFT_ADDRESS=0x...
+EXPO_PUBLIC_STREETPASS_TOKEN_ADDRESS=0x...
+```
+
+6. **Verify Contracts on ScrollScan**
+```bash
+npx hardhat verify --network scroll <CONTRACT_ADDRESS>
+```
+
+See `/contracts/README.md` for detailed contract documentation.
 
 ## Security Features
 

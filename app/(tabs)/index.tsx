@@ -10,7 +10,7 @@ import {
   Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
-import { MapPin, Navigation, Wifi } from 'lucide-react-native';
+import { MapPin, Navigation, Wifi, LogOut, TestTube } from 'lucide-react-native';
 import { supabase, Database } from '@/lib/supabase';
 import { useWallet } from '@/contexts/WalletContext';
 import { useUser } from '@/contexts/UserContext';
@@ -23,13 +23,14 @@ interface LocationWithDistance extends LocationData {
 }
 
 export default function MapScreen() {
-  const { isConnected, connect, isConnecting, address } = useWallet();
+  const { isConnected, connect, disconnect, isConnecting, address } = useWallet();
   const { user } = useUser();
   const router = useRouter();
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [locations, setLocations] = useState<LocationWithDistance[]>([]);
   const [loading, setLoading] = useState(true);
   const [permissionStatus, setPermissionStatus] = useState<Location.PermissionStatus | null>(null);
+  const [testMode, setTestMode] = useState(false);
 
   useEffect(() => {
     requestLocationPermission();
@@ -111,17 +112,17 @@ export default function MapScreen() {
       return;
     }
 
-    if (location.distance > 0.1) {
+    if (!testMode && location.distance > 0.1) {
       Alert.alert(
         'Too Far Away',
-        `You need to be within 100 meters of this location to check in. You are ${(location.distance * 1000).toFixed(0)} meters away.`
+        `You need to be within 100 meters of this location to check in. You are ${(location.distance * 1000).toFixed(0)} meters away.\n\nTip: Enable Test Mode to check in from anywhere!`
       );
       return;
     }
 
     Alert.alert(
       'Check In',
-      `Check in at ${location.name}? This will mint a location NFT!`,
+      `Check in at ${location.name}? This will mint a location NFT!${testMode ? '\n\n(Test Mode: Distance check disabled)' : ''}`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -228,24 +229,47 @@ export default function MapScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Nearby Locations</Text>
-        {!isConnected && (
-          <TouchableOpacity
-            style={styles.connectButton}
-            onPress={connect}
-            disabled={isConnecting}
-          >
-            <Wifi size={16} color="#ffffff" />
-            <Text style={styles.connectButtonText}>
-              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-            </Text>
-          </TouchableOpacity>
-        )}
-        {isConnected && address && (
-          <View style={styles.addressBadge}>
-            <Text style={styles.addressText}>
-              {address.slice(0, 6)}...{address.slice(-4)}
-            </Text>
-          </View>
+        <View style={styles.headerRight}>
+          {!isConnected && (
+            <TouchableOpacity
+              style={styles.connectButton}
+              onPress={connect}
+              disabled={isConnecting}
+            >
+              <Wifi size={16} color="#ffffff" />
+              <Text style={styles.connectButtonText}>
+                {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+              </Text>
+            </TouchableOpacity>
+          )}
+          {isConnected && address && (
+            <>
+              <TouchableOpacity
+                style={styles.addressBadge}
+                onPress={disconnect}
+              >
+                <Text style={styles.addressText}>
+                  {address.slice(0, 6)}...{address.slice(-4)}
+                </Text>
+                <LogOut size={14} color="#1e40af" />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+      </View>
+
+      <View style={styles.testModeBar}>
+        <TouchableOpacity
+          style={[styles.testModeButton, testMode && styles.testModeButtonActive]}
+          onPress={() => setTestMode(!testMode)}
+        >
+          <TestTube size={16} color={testMode ? '#ffffff' : '#6b7280'} />
+          <Text style={[styles.testModeText, testMode && styles.testModeTextActive]}>
+            Test Mode {testMode ? 'ON' : 'OFF'}
+          </Text>
+        </TouchableOpacity>
+        {testMode && (
+          <Text style={styles.testModeInfo}>Distance checks disabled</Text>
         )}
       </View>
 
@@ -344,6 +368,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#111827',
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   connectButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -359,6 +388,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   addressBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: '#dbeafe',
     paddingHorizontal: 12,
     paddingVertical: 6,
@@ -368,6 +400,43 @@ const styles = StyleSheet.create({
     color: '#1e40af',
     fontSize: 12,
     fontWeight: '600',
+  },
+  testModeBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  testModeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    backgroundColor: '#ffffff',
+  },
+  testModeButtonActive: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  testModeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#6b7280',
+  },
+  testModeTextActive: {
+    color: '#ffffff',
+  },
+  testModeInfo: {
+    fontSize: 12,
+    color: '#6b7280',
+    fontStyle: 'italic',
   },
   scrollView: {
     flex: 1,
