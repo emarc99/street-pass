@@ -7,11 +7,15 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Dimensions,
 } from 'react-native';
-import { Target, Trophy, Clock, CheckCircle, Wifi, LogOut } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Target, Trophy, Clock, CheckCircle, Wifi, LogOut, Sparkles, Flame, Zap, Star } from 'lucide-react-native';
 import { supabase, Database } from '@/lib/supabase';
 import { useWallet } from '@/contexts/WalletContext';
 import { useUser } from '@/contexts/UserContext';
+
+const { width } = Dimensions.get('window');
 
 type Quest = Database['public']['Tables']['quests']['Row'];
 type UserQuest = Database['public']['Tables']['user_quests']['Row'] & {
@@ -132,23 +136,37 @@ export default function QuestsScreen() {
 
   if (!isConnected || !user) {
     return (
-      <View style={styles.centerContainer}>
-        <Target size={64} color="#9ca3af" />
-        <Text style={styles.emptyTitle}>Connect Wallet</Text>
-        <Text style={styles.emptyText}>
-          Connect your wallet to view and complete quests
+      <LinearGradient
+        colors={['#0f172a', '#1e293b', '#334155']}
+        style={styles.centerContainer}
+      >
+        <View style={styles.glowContainer}>
+          <View style={styles.iconGlow}>
+            <Target size={72} color="#60a5fa" strokeWidth={2.5} />
+          </View>
+        </View>
+        <Text style={styles.emptyTitleWhite}>Begin Your Journey</Text>
+        <Text style={styles.emptyTextWhite}>
+          Connect your wallet to unlock epic quests and earn rewards
         </Text>
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={styles.gradientButton}
           onPress={connect}
           disabled={isConnecting}
         >
-          <Wifi size={16} color="#ffffff" />
-          <Text style={styles.primaryButtonText}>
-            {isConnecting ? 'Connecting...' : 'Connect Wallet'}
-          </Text>
+          <LinearGradient
+            colors={['#3b82f6', '#2563eb', '#1d4ed8']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.gradientButtonInner}
+          >
+            <Sparkles size={20} color="#ffffff" />
+            <Text style={styles.gradientButtonText}>
+              {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+            </Text>
+          </LinearGradient>
         </TouchableOpacity>
-      </View>
+      </LinearGradient>
     );
   }
 
@@ -161,141 +179,230 @@ export default function QuestsScreen() {
     );
   }
 
+  const getQuestIcon = (questType: string) => {
+    switch (questType) {
+      case 'visit_count':
+        return <Target size={24} color="#60a5fa" strokeWidth={2.5} />;
+      case 'visit_category':
+        return <Sparkles size={24} color="#a78bfa" strokeWidth={2.5} />;
+      case 'visit_specific':
+        return <Star size={24} color="#fbbf24" strokeWidth={2.5} />;
+      default:
+        return <Zap size={24} color="#10b981" strokeWidth={2.5} />;
+    }
+  };
+
+  const getDifficultyColor = (rewardAmount: number): [string, string, string] => {
+    if (rewardAmount >= 100) return ['#dc2626', '#b91c1c', '#991b1b'];
+    if (rewardAmount >= 50) return ['#f59e0b', '#d97706', '#b45309'];
+    return ['#10b981', '#059669', '#047857'];
+  };
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Daily Quests</Text>
-          <View style={styles.levelBadge}>
-            <Trophy size={16} color="#fbbf24" />
-            <Text style={styles.levelText}>Level {user.level}</Text>
+      <LinearGradient
+        colors={['#0f172a', '#1e293b']}
+        style={styles.header}
+      >
+        <View style={styles.headerContent}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>Epic Quests</Text>
+            <LinearGradient
+              colors={['#fbbf24', '#f59e0b', '#d97706']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.levelBadge}
+            >
+              <Trophy size={16} color="#ffffff" />
+              <Text style={styles.levelText}>Level {user.level}</Text>
+            </LinearGradient>
           </View>
+          {isConnected && address && (
+            <TouchableOpacity style={styles.addressBadge} onPress={disconnect}>
+              <Text style={styles.addressText}>
+                {address.slice(0, 6)}...{address.slice(-4)}
+              </Text>
+              <LogOut size={14} color="#94a3b8" />
+            </TouchableOpacity>
+          )}
         </View>
-        {isConnected && address && (
-          <TouchableOpacity style={styles.addressBadge} onPress={disconnect}>
-            <Text style={styles.addressText}>
-              {address.slice(0, 6)}...{address.slice(-4)}
-            </Text>
-            <LogOut size={14} color="#1e40af" />
-          </TouchableOpacity>
-        )}
-      </View>
+      </LinearGradient>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.statsContainer}>
+        <LinearGradient
+          colors={['#1e293b', '#0f172a']}
+          style={styles.statsContainer}
+        >
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{user.total_points}</Text>
-            <Text style={styles.statLabel}>Total Points</Text>
+            <LinearGradient
+              colors={['#3b82f6', '#2563eb']}
+              style={styles.statGradient}
+            >
+              <Sparkles size={20} color="#ffffff" />
+              <Text style={styles.statValue}>{user.total_points}</Text>
+              <Text style={styles.statLabel}>Points</Text>
+            </LinearGradient>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>
-              {userQuests.filter((q) => q.status === 'completed').length}
-            </Text>
-            <Text style={styles.statLabel}>Completed</Text>
+            <LinearGradient
+              colors={['#10b981', '#059669']}
+              style={styles.statGradient}
+            >
+              <CheckCircle size={20} color="#ffffff" />
+              <Text style={styles.statValue}>
+                {userQuests.filter((q) => q.status === 'completed').length}
+              </Text>
+              <Text style={styles.statLabel}>Completed</Text>
+            </LinearGradient>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>
-              {userQuests.filter((q) => q.status === 'active').length}
-            </Text>
-            <Text style={styles.statLabel}>Active</Text>
+            <LinearGradient
+              colors={['#f59e0b', '#d97706']}
+              style={styles.statGradient}
+            >
+              <Flame size={20} color="#ffffff" />
+              <Text style={styles.statValue}>
+                {userQuests.filter((q) => q.status === 'active').length}
+              </Text>
+              <Text style={styles.statLabel}>Active</Text>
+            </LinearGradient>
           </View>
-        </View>
+        </LinearGradient>
 
         {userQuests.length === 0 ? (
           <View style={styles.emptyState}>
-            <Target size={48} color="#9ca3af" />
-            <Text style={styles.emptyTitle}>No Quests Available</Text>
+            <View style={styles.emptyIconContainer}>
+              <Target size={64} color="#475569" strokeWidth={2} />
+            </View>
+            <Text style={styles.emptyTitle}>No Active Quests</Text>
             <Text style={styles.emptyText}>
-              Check back later for new quests
+              New adventures await! Check back soon for exciting challenges
             </Text>
           </View>
         ) : (
           <View style={styles.questsList}>
-            <Text style={styles.sectionTitle}>Your Quests</Text>
-            {userQuests.map((userQuest) => (
-              <View key={userQuest.id} style={styles.questCard}>
-                <View style={styles.questHeader}>
-                  <Text style={styles.questTitle}>{userQuest.quest.title}</Text>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor:
-                          userQuest.status === 'completed'
-                            ? '#d1fae5'
-                            : userQuest.status === 'active'
-                            ? '#dbeafe'
-                            : '#fee2e2',
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.statusText,
-                        {
-                          color:
-                            userQuest.status === 'completed'
-                              ? '#065f46'
-                              : userQuest.status === 'active'
-                              ? '#1e40af'
-                              : '#991b1b',
-                        },
-                      ]}
-                    >
-                      {userQuest.status}
-                    </Text>
-                  </View>
-                </View>
-
-                <Text style={styles.questDescription}>
-                  {userQuest.quest.description}
-                </Text>
-
-                <Text style={styles.requirementText}>
-                  {getQuestRequirementText(userQuest.quest)}
-                </Text>
-
-                <View style={styles.progressContainer}>
-                  <View style={styles.progressBar}>
-                    <View
-                      style={[
-                        styles.progressFill,
-                        { width: `${getQuestProgress(userQuest)}%` },
-                      ]}
-                    />
-                  </View>
-                  <Text style={styles.progressText}>
-                    {Math.floor(getQuestProgress(userQuest))}%
-                  </Text>
-                </View>
-
-                <View style={styles.questFooter}>
-                  <View style={styles.rewardContainer}>
-                    <Trophy size={16} color="#fbbf24" />
-                    <Text style={styles.rewardText}>
-                      {userQuest.quest.reward_amount} points
-                    </Text>
-                  </View>
-
-                  <View style={styles.timeContainer}>
-                    <Clock size={14} color="#6b7280" />
-                    <Text style={styles.timeText}>
-                      {getTimeRemaining(userQuest.quest.active_until)}
-                    </Text>
-                  </View>
-                </View>
-
-                {userQuest.status === 'completed' && (
-                  <TouchableOpacity
-                    style={styles.claimButton}
-                    onPress={() => claimReward(userQuest)}
-                  >
-                    <CheckCircle size={18} color="#ffffff" />
-                    <Text style={styles.claimButtonText}>Claim Reward</Text>
-                  </TouchableOpacity>
-                )}
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Available Quests</Text>
+              <View style={styles.questCount}>
+                <Text style={styles.questCountText}>{userQuests.length}</Text>
               </View>
-            ))}
+            </View>
+            {userQuests.map((userQuest) => {
+              const progress = getQuestProgress(userQuest);
+              const isCompleted = userQuest.status === 'completed';
+              const isClaimed = userQuest.status === 'claimed';
+
+              return (
+                <View key={userQuest.id} style={styles.questCard}>
+                  <LinearGradient
+                    colors={
+                      isCompleted || isClaimed
+                        ? ['#064e3b', '#065f46', '#047857']
+                        : ['#1e293b', '#334155', '#475569']
+                    }
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.questCardGradient}
+                  >
+                    <View style={styles.questIconContainer}>
+                      {getQuestIcon(userQuest.quest.quest_type)}
+                    </View>
+
+                    <View style={styles.questContent}>
+                      <View style={styles.questHeader}>
+                        <Text style={styles.questTitle}>{userQuest.quest.title}</Text>
+                        <View
+                          style={[
+                            styles.statusBadge,
+                            {
+                              backgroundColor:
+                                isCompleted || isClaimed ? '#10b98133' : '#3b82f633',
+                            },
+                          ]}
+                        >
+                          <Text
+                            style={[
+                              styles.statusText,
+                              {
+                                color: isCompleted || isClaimed ? '#10b981' : '#60a5fa',
+                              },
+                            ]}
+                          >
+                            {userQuest.status}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.questDescription}>
+                        {userQuest.quest.description}
+                      </Text>
+
+                      <View style={styles.requirementContainer}>
+                        <View style={styles.requirementDot} />
+                        <Text style={styles.requirementText}>
+                          {getQuestRequirementText(userQuest.quest)}
+                        </Text>
+                      </View>
+
+                      <View style={styles.progressContainer}>
+                        <View style={styles.progressBar}>
+                          <LinearGradient
+                            colors={['#3b82f6', '#2563eb', '#1d4ed8']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 0 }}
+                            style={[
+                              styles.progressFill,
+                              { width: `${progress}%` },
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.progressText}>
+                          {Math.floor(progress)}%
+                        </Text>
+                      </View>
+
+                      <View style={styles.questFooter}>
+                        <LinearGradient
+                          colors={getDifficultyColor(userQuest.quest.reward_amount)}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={styles.rewardBadge}
+                        >
+                          <Trophy size={14} color="#ffffff" />
+                          <Text style={styles.rewardBadgeText}>
+                            +{userQuest.quest.reward_amount}
+                          </Text>
+                        </LinearGradient>
+
+                        <View style={styles.timeContainer}>
+                          <Clock size={14} color="#94a3b8" />
+                          <Text style={styles.timeText}>
+                            {getTimeRemaining(userQuest.quest.active_until)}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {isCompleted && userQuest.status !== 'claimed' && (
+                        <TouchableOpacity
+                          style={styles.claimButtonWrapper}
+                          onPress={() => claimReward(userQuest)}
+                        >
+                          <LinearGradient
+                            colors={['#10b981', '#059669', '#047857']}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                            style={styles.claimButton}
+                          >
+                            <Sparkles size={18} color="#ffffff" />
+                            <Text style={styles.claimButtonText}>Claim Reward</Text>
+                          </LinearGradient>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </LinearGradient>
+                </View>
+              );
+            })}
           </View>
         )}
       </ScrollView>
@@ -306,24 +413,73 @@ export default function QuestsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#0f172a',
   },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: 32,
+  },
+  glowContainer: {
+    marginBottom: 32,
+  },
+  iconGlow: {
     padding: 24,
-    backgroundColor: '#f9fafb',
+    borderRadius: 100,
+    backgroundColor: '#1e293b',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  emptyTitleWhite: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#f8fafc',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyTextWhite: {
+    fontSize: 16,
+    color: '#94a3b8',
+    textAlign: 'center',
+    lineHeight: 24,
+    maxWidth: 300,
+  },
+  gradientButton: {
+    marginTop: 32,
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  gradientButtonInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+  },
+  gradientButtonText: {
+    color: '#ffffff',
+    fontSize: 17,
+    fontWeight: '700',
   },
   header: {
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 16,
-    paddingTop: 60,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
   headerLeft: {
     flexDirection: 'row',
@@ -331,52 +487,39 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  addressBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#dbeafe',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  addressText: {
-    color: '#1e40af',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 16,
-  },
-  primaryButtonText: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 28,
+    fontWeight: '800',
+    color: '#f8fafc',
+    letterSpacing: -0.5,
   },
   levelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: '#fef3c7',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   levelText: {
-    color: '#92400e',
-    fontSize: 14,
+    color: '#ffffff',
+    fontSize: 13,
     fontWeight: '700',
+  },
+  addressBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#1e293b',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  addressText: {
+    color: '#cbd5e1',
+    fontSize: 12,
+    fontWeight: '600',
   },
   scrollView: {
     flex: 1,
@@ -384,168 +527,238 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#6b7280',
+    color: '#94a3b8',
   },
   statsContainer: {
     flexDirection: 'row',
-    padding: 16,
+    padding: 20,
     gap: 12,
+    marginBottom: 8,
   },
   statBox: {
     flex: 1,
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
+  },
+  statGradient: {
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    justifyContent: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    gap: 8,
   },
   statValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#111827',
-    marginBottom: 4,
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    fontWeight: '500',
+    fontSize: 11,
+    color: '#ffffffcc',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   questsList: {
-    padding: 16,
+    padding: 20,
+    paddingTop: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#111827',
-    marginBottom: 12,
+    color: '#f8fafc',
+  },
+  questCount: {
+    backgroundColor: '#3b82f6',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  questCountText: {
+    color: '#ffffff',
+    fontSize: 14,
+    fontWeight: '700',
   },
   questCard: {
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
+    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  questCardGradient: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: '#ffffff10',
+  },
+  questIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: '#0f172a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#ffffff15',
+  },
+  questContent: {
+    flex: 1,
   },
   questHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
+    gap: 12,
   },
   questTitle: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: '700',
-    color: '#111827',
+    color: '#f8fafc',
     flex: 1,
+    lineHeight: 26,
   },
   statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   questDescription: {
     fontSize: 14,
-    color: '#6b7280',
-    marginBottom: 8,
+    color: '#cbd5e1',
+    marginBottom: 12,
     lineHeight: 20,
+  },
+  requirementContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 14,
+  },
+  requirementDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#60a5fa',
   },
   requirementText: {
     fontSize: 13,
-    color: '#3b82f6',
+    color: '#60a5fa',
     fontWeight: '600',
-    marginBottom: 12,
   },
   progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 14,
   },
   progressBar: {
     flex: 1,
-    height: 8,
-    backgroundColor: '#e5e7eb',
-    borderRadius: 4,
+    height: 10,
+    backgroundColor: '#0f172a',
+    borderRadius: 5,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#ffffff15',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#3b82f6',
-    borderRadius: 4,
+    borderRadius: 5,
   },
   progressText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '700',
-    color: '#6b7280',
+    color: '#94a3b8',
+    minWidth: 40,
+    textAlign: 'right',
   },
   questFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  rewardContainer: {
+  rewardBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  rewardText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#92400e',
+  rewardBadgeText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#ffffff',
   },
   timeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
   timeText: {
     fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '500',
+    color: '#94a3b8',
+    fontWeight: '600',
+  },
+  claimButtonWrapper: {
+    marginTop: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   claimButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#10b981',
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginTop: 12,
+    paddingVertical: 14,
   },
   claimButtonText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 48,
+    paddingVertical: 64,
+    paddingHorizontal: 32,
+  },
+  emptyIconContainer: {
+    padding: 20,
+    borderRadius: 100,
+    backgroundColor: '#1e293b',
+    marginBottom: 20,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
-    color: '#111827',
-    marginTop: 16,
+    color: '#f8fafc',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   emptyText: {
-    fontSize: 14,
-    color: '#6b7280',
-    marginTop: 4,
+    fontSize: 15,
+    color: '#94a3b8',
     textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 280,
   },
 });
