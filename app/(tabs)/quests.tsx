@@ -24,7 +24,7 @@ type UserQuest = Database['public']['Tables']['user_quests']['Row'] & {
 
 export default function QuestsScreen() {
   const { isConnected, connect, disconnect, isConnecting, address } = useWallet();
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const [userQuests, setUserQuests] = useState<UserQuest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -170,12 +170,17 @@ export default function QuestsScreen() {
     );
   }
 
-  if (loading) {
+  if (loading || userLoading) {
     return (
-      <View style={styles.centerContainer}>
+      <LinearGradient
+        colors={['#0f172a', '#1e293b']}
+        style={styles.centerContainer}
+      >
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text style={styles.loadingText}>Loading quests...</Text>
-      </View>
+        <Text style={styles.loadingText}>
+          {userLoading ? 'Loading profile...' : 'Loading quests...'}
+        </Text>
+      </LinearGradient>
     );
   }
 
